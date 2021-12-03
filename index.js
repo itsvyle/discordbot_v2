@@ -70,7 +70,9 @@ class Client extends Events {
          * The bot client
          * @type {Discord.Client}
          */
-        Object.defineProperty(this,"bot",{value: new Discord.Client()});
+        Object.defineProperty(this,"bot",{value: new Discord.Client({
+            intents: ["GUILDS", "GUILD_MESSAGES"]
+        })});
 
         this.DBName = DBName;
 
@@ -346,9 +348,10 @@ function checkGrandCommands(msg,guild) {
         return;
     }
     if (!client.guilds.has(msg.guild.id)) {
-        msg.channel.send((new Discord.MessageEmbed())
+        msg.channel.send(
+            {embeds: [((new Discord.MessageEmbed())
             .setAuthor("Vyle Bot",client.avatarURL)
-            .setDescription("Could not access data: please send a `vyle init` to initialize this server")
+            .setDescription("Could not access data: please send a `vyle init` to initialize this server"))]}
         );
     }
     if (trimmed.startsWith("vyle help")) {
@@ -362,7 +365,7 @@ function checkGrandCommands(msg,guild) {
             .addField("Uptime:","`" + Util.formatTime(Date.now() - client.bot.readyTimestamp) + "`")
             .addField("Dashboard","[Click here for server's dashboard](" + Config.dashboard + "/edit?server_id=" + guild.id + ")");
         embed.setTimestamp();
-        msg.channel.send(embed);
+        msg.channel.send({ embeds: [embed] });
     }
 }
 
@@ -453,7 +456,7 @@ async function onMessage(msg) {
             e = guild.UIHelpCommand(args);
         }
         
-        msg.channel.send(e.setAuthor(msg.author.tag + "'s command", msg.author.displayAvatarURL()));
+        msg.channel.send({embeds: [e.setAuthor(msg.author.tag + "'s command", msg.author.displayAvatarURL())]});
     } else if (cmd.name === "write") {
         if (!args) {
             return msg.channel.send(`${msg.author}, please provide text to rewrite.\nUsage of the command: \`${guild.prefix}${cmd.usage}\``);
@@ -471,7 +474,7 @@ async function onMessage(msg) {
             .setAuthor(msg.author.tag + "'s command", msg.author.displayAvatarURL())
             .setDescription(`Found ${links.length} results for search \`${args}\``);
         if (links.length > 20) {
-            return msg.channel.send(embed.addField("Error","This search returned too many result\n**Make a new search with more precise search**"));
+            return msg.channel.send({embeds: [embed.addField("Error","This search returned too many result\n**Make a new search with more precise search**")]});
         }
         for(let l of links) {
             let val = "";
@@ -487,7 +490,7 @@ async function onMessage(msg) {
 
             embed.addField(l.full_name,val);
         }
-        msg.channel.send(embed);
+        msg.channel.send({ embeds: [embed] });
     } else if (cmd.name === "clear") {
         if (args && args.trim().toLowerCase() == "all") {args = 100;}
         args = Util.parseInt(args);
@@ -518,7 +521,7 @@ async function onMessage(msg) {
         }],{
             no_cache: params.includes("no_cache")
         }).then((embed) => {
-            msg.channel.send(embed);
+            msg.channel.send({ embeds: [embed] });
         }).catch((e) => {
             msg.channel.send(e);
         });
@@ -528,7 +531,7 @@ async function onMessage(msg) {
 }
 
 
-client.bot.on("message",function (m) {
+client.bot.on("messageCreate",function (m) {
     try {
         onMessage(m);
     } catch (e) {
